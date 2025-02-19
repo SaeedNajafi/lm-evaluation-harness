@@ -25,7 +25,7 @@ from transformers.models.auto.modeling_auto import (
 
 #from lm_eval.models.modeling_llama_DTRNet_dynamic_k import LlamaForCausalLM
 from train_MoEAdaptor.modeling_llama_MoE_updated import LlamaForCausalLM
-#from transformers import LlamaForCausalLM
+# from transformers import LlamaForCausalLM
 
 from lm_eval import utils
 from lm_eval.api.instance import Instance

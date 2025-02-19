@@ -8,7 +8,8 @@ export CUDA_HOME=$CONDA_PREFIX
 export NCCL_HOME=$CONDA_PREFIX
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib
 
-run_name="Tinyllama_DTRNet_k_0.35_1.0KD+0.0CE_expand_hidden_non_linear_router_mixed_data_lr_2e-5-checkpoint-40000"
+#run_name="Tinyllama_DTRNet_k_0.35_1.0KD+0.0CE_expand_hidden_non_linear_router_mixed_data_lr_2e-5-checkpoint-65000"
+run_name="Tinyllama_DTRNet_k_0.35_1.0KD+0.0CE_expand_hidden_non_linear_router_mixed_data_part_one_lr_2e-5_checkpoint-2044"
 export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
 NUM_GPUs=8
 
@@ -44,11 +45,11 @@ accelerate launch \
     --main_process_port=$MASTER_PORT \
     --rdzv_backend=static \
     lm_eval --model hf \
-    --model_args pretrained=/work/saeed/checkpoints/Tinyllama_DTRNet_k_0.35_1.0KD+0.0CE_expand_hidden_non_linear_router_mixed_data_lr_2e-5/checkpoint-40000,dtype=bfloat16 \
+    --model_args pretrained=/work/saeed/checkpoints/Tinyllama_DTRNet_k_0.35_1.0KD+0.0CE_expand_hidden_non_linear_router_mixed_data_part_one_lr_2e-5/checkpoint-2044,dtype=bfloat16 \
     --tasks winogrande,arc_easy,piqa,boolq,hellaswag,openbookqa,arc_challenge,mmlu \
     --batch_size 1 \
     --num_fewshot 0 \
     --trust_remote_code \
     --gen_kwargs max_new_tokens=1024,do_sample=False \
-    --output_path /work/saeed/checkpoints/Tinyllama_DTRNet_k_0.35_1.0KD+0.0CE_expand_hidden_non_linear_router_mixed_data_lr_2e-5/checkpoint-40000/lm_harness_output > ${LOG_PATH} 2>&1
+    --output_path /work/saeed/checkpoints/Tinyllama_DTRNet_k_0.35_1.0KD+0.0CE_expand_hidden_non_linear_router_mixed_data_part_one_lr_2e-5/checkpoint-2044/lm_harness_output > ${LOG_PATH} 2>&1
 
