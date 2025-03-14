@@ -1,13 +1,13 @@
 #!/bin/bash
 
-eval "$(conda shell.bash hook)"
-conda activate llm-env
+# eval "$(conda shell.bash hook)"
+# conda activate llm-env
 
-export PATH=/usr/local/cuda-12.4/bin${PATH:+:${PATH}}
-export LD_LIBRARY_PATH=/usr/local/cuda-12.4/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-export CUDA_HOME=/usr/local/cuda-12.4
+# export PATH=/usr/local/cuda-12.4/bin${PATH:+:${PATH}}
+# export LD_LIBRARY_PATH=/usr/local/cuda-12.4/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+# export CUDA_HOME=/usr/local/cuda-12.4
 
-run_name="llama3.2-1b-offline-simpo-beta-7.5-lr-0.0000006-gamma-to-beta-1.6_checkpoint-4460_full_model"
+run_name="llama3-8b-offline-mmpo-beta-0.1-lr-0.000001-reward_eps_0.0-relu-epsilon-0.5-full_standard_log_checkpoint-449"
 export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
 NUM_GPUs=8
 
@@ -43,9 +43,9 @@ accelerate launch \
     --main_process_port=$MASTER_PORT \
     --rdzv_backend=static \
     lm_eval --model hf \
-    --model_args pretrained=/work/saeed/narval/simpo_tuning_llama_1b/llama3.2-1b-offline-simpo-beta-7.5-lr-0.0000006-gamma-to-beta-1.6/checkpoint-4460_full_model,dtype=bfloat16 \
+    --model_args pretrained=/work/saeed/narval/mmpo_8b_full_standard_log/llama3-8b-offline-mmpo-beta-0.1-lr-0.000001-reward_eps_0.0-relu-epsilon-0.5-full_standard_log/checkpoint-449,dtype=bfloat16 \
     --tasks winogrande,arc_easy,piqa,boolq,hellaswag,openbookqa,arc_challenge,mmlu,gsm8k,mathqa,race,commonsense_qa \
-    --batch_size 8 \
+    --batch_size 22 \
     --num_fewshot 3 \
     --trust_remote_code \
     --gen_kwargs max_new_tokens=1024,do_sample=False \
