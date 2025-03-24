@@ -38,10 +38,14 @@ from lm_eval.models.utils import (
     pad_and_concat,
     stop_sequences_criteria,
 )
+# from train_MoEAdaptor.modeling_llama_DTRNet_fused import LlamaForCausalLM
+# from train_MoEAdaptor.modeling_llama_MoE_updated import LlamaForCausalLM
+from train_fused_dtrnet.modeling_llama_DTRNet_fused import LlamaForCausalLM
 
 
 eval_logger = logging.getLogger(__name__)
 
+model_class = LlamaForCausalLM
 
 @register_model("hf-auto", "hf", "huggingface")
 class HFLM(TemplateLM):
@@ -52,7 +56,7 @@ class HFLM(TemplateLM):
     Supports data-parallel multi-GPU with HF Accelerate.
     """
 
-    AUTO_MODEL_CLASS = None
+    AUTO_MODEL_CLASS = model_class
     _DEFAULT_MAX_LENGTH = 2048
 
     def __init__(
@@ -760,10 +764,11 @@ class HFLM(TemplateLM):
                     "labels": batched_conts,
                 }
             else:
-                call_kwargs = {}
                 test_batch = torch.ones(
                     (batch_size, max_length), device=self.device
                 ).long()
+                test_mask = test_batch
+                call_kwargs = {"attn_mask": test_mask}
             for _ in range(5):
                 out = F.log_softmax(self._model_call(test_batch, **call_kwargs), dim=-1)  # noqa: F841
 
@@ -872,15 +877,15 @@ class HFLM(TemplateLM):
         logits returned from the model's decoder
         """
         with torch.no_grad():
-            if attn_mask is not None or labels is not None:
-                assert attn_mask is not None and labels is not None
-                assert self.AUTO_MODEL_CLASS == transformers.AutoModelForSeq2SeqLM
-                return self.model(
-                    input_ids=inps, attention_mask=attn_mask, labels=labels
-                ).logits
-            else:
-                assert self.AUTO_MODEL_CLASS == transformers.AutoModelForCausalLM
-                return self.model(inps).logits
+            # if attn_mask is not None or labels is not None:
+            #     assert attn_mask is not None and labels is not None
+            #     assert self.AUTO_MODEL_CLASS == transformers.AutoModelForSeq2SeqLM or self.AUTO_MODEL_CLASS == transformers.AutoModelForSeq2SeqLM
+            #     return self.model(
+            #         input_ids=inps, attention_mask=attn_mask, labels=labels
+            #     ).logits
+            # else:
+            assert (self.AUTO_MODEL_CLASS == transformers.AutoModelForCausalLM) or (self.AUTO_MODEL_CLASS == LlamaForCausalLM)
+            return self.model(inps, attention_mask=attn_mask).logits
 
     def _model_generate(self, context, max_length, stop, **generation_kwargs):
         # temperature = 0.0 if not set
@@ -1177,9 +1182,12 @@ class HFLM(TemplateLM):
             # create encoder attn mask and batched conts, if seq2seq
             call_kwargs = {}
             if self.backend == "causal":
-                batched_inps = pad_and_concat(
-                    padding_len_inp, inps, padding_side="right"
+                batched_inps, attn_mask = pad_and_concat(
+                    padding_len_inp, inps, padding_side=self.tokenizer.padding_side, return_attn_mask=True
                 )  # [batch, padding_len_inp]
+                call_kwargs = {
+                    "attn_mask": attn_mask,
+                }
             elif self.backend == "seq2seq":
                 # TODO: left-pad encoder inps and mask?
                 batched_inps = pad_and_concat(

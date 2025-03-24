@@ -151,6 +151,7 @@ def pad_and_concat(
     max_length: int,
     tensors: List[torch.Tensor],
     padding_side: Literal["right", "left"] = "right",
+    return_attn_mask: bool = False
 ):
     """
     Method for padding a list of tensors given the maximum tensor
@@ -161,10 +162,12 @@ def pad_and_concat(
         f"Unrecognized padding type: '{padding_side}' not 'left' or 'right'"
     )
 
+    attn_mask = []
     for i, tensor in enumerate(tensors):
         if len(tensor.shape) == 2:
             tensor = tensor.squeeze(0)  # squeeze, in case passed [1, seq] size
         tensor_len = tensor.shape[0]
+        mask = torch.ones_like(tensor)
         if tensor_len < max_length:
             if padding_side == "right":
                 # right-pad
@@ -179,6 +182,17 @@ def pad_and_concat(
                     ],
                     dim=0,
                 ).unsqueeze(0)
+                mask = torch.cat(
+                    [
+                        mask,  # [seq]
+                        torch.zeros(
+                            max_length - tensor_len,
+                            dtype=torch.long,
+                            device=tensor.device,
+                        ),  # [padding_length - seq]
+                    ],
+                    dim=0,
+                )
             else:
                 # left-pad
                 tensors[i] = torch.cat(
@@ -192,10 +206,26 @@ def pad_and_concat(
                     ],
                     dim=0,
                 ).unsqueeze(0)
+                mask = torch.cat(
+                    [
+                        torch.zeros(
+                            max_length - tensor_len,
+                            dtype=torch.long,
+                            device=tensor.device,
+                        ),  # [padding_length - seq]
+                        tensor,  # [seq]
+                    ],
+                    dim=0,
+                )
         else:
             tensors[i] = tensor.unsqueeze(0)
 
-    return torch.cat(tensors, dim=0)
+        attn_mask.append(mask.unsqueeze(0))
+    
+    if return_attn_mask:
+        return torch.cat(tensors, dim=0), torch.cat(attn_mask, dim=0)
+    else:
+        return torch.cat(tensors, dim=0)
 
 
 def clear_torch_cache() -> None:
