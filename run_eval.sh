@@ -47,7 +47,7 @@ accelerate launch \
     --main_process_port=$MASTER_PORT \
     --rdzv_backend=static \
     lm_eval --model hf \
-    --model_args pretrained=/work/saeed/dtrnet/Tinyllama_Flex_FUSED_DTRNet_k_0.35_1.0KD+0.0CE_fuse_exps_test_lr_2e-5/checkpoint-4244,dtype=bfloat16,attn_implementation=flash_attention_2 \
+    --model_args pretrained=/work/saeed/dtrnet/Tinyllama_Flex_FUSED_DTRNet_k_0.35_1.0KD+0.0CE_fuse_exps_test_lr_2e-5/checkpoint-4244,dtype=bfloat16,attn_implementation=eager \
     --tasks winogrande,arc_easy,piqa,boolq,hellaswag,openbookqa,arc_challenge,mmlu \
     --batch_size 1 \
     --num_fewshot 0 \
