@@ -3,10 +3,10 @@
 #SBATCH --job-name=lm-harness
 #SBATCH --account=def-afyshe-ab
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=2
-#SBATCH --cpus-per-gpu=5
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-gpu=4
 #SBATCH --mem=64G
-#SBATCH --time=01:00:00
+#SBATCH --time=02:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -56,7 +56,6 @@ NUM_PROCS=$((NUM_GPUs*SLURM_NNODES))
 
 srun -l \
     bash -c "accelerate launch \
-    --multi-gpu \
     --num_machines=1 \
     --num_processes=$NUM_PROCS \
     --machine_rank=0 \
@@ -68,7 +67,7 @@ srun -l \
     --write_out \
     --model_args pretrained=${MODEL_PATH},dtype=bfloat16 \
     --tasks winogrande,arc_easy,piqa,hellaswag,openbookqa,arc_challenge,mmlu,mathqa,race,commonsense_qa \
-    --batch_size 10 \
+    --batch_size 4 \
     --num_fewshot 0 \
     --seed 42 \
     --trust_remote_code \
